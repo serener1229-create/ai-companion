@@ -1,4 +1,4 @@
-const BACKEND_URL = localStorage.getItem("nikoBackendURL") || "http://YOUR-COMPUTER-IP:3000";
+const BACKEND_URL = "https://niko-backend-xqhb.onrender.com";
 
 const screens = [...document.querySelectorAll(".screen")];
 function show(id){screens.forEach(s=>s.classList.toggle("active",s.id===id)); window.scrollTo(0,0)}
