@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <title>Niko</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Niko</h1>
+        <p>Your personal AI companion</p>
+      </div>
+      <button id="speakBtn" class="icon" aria-label="Voice input">🎙️</button>
+    </header>
+
+    <section id="home" class="screen active">
+      <div class="hero">
+        <div class="niko-orb">N</div>
+        <h2>Hi, I'm Niko.</h2>
+        <p>Ask me anything, practice a language, or tell me something to remember.</p>
+      </div>
+
+      <div class="grid">
+        <button data-screen="chat">🧠<b>Ask Niko</b><span>General knowledge & questions</span></button>
+        <button data-screen="languages">🌍<b>Languages</b><span>Turkish · German · Korean · Urdu</span></button>
+        <button data-screen="memory">💾<b>My Memory</b><span>Things you choose to save</span></button>
+        <button data-screen="medical">🩺<b>Medical</b><span>Health information & safety</span></button>
+      </div>
+
+      <button class="emergency" data-screen="emergency">🚨 EMERGENCY</button>
+    </section>
+
+    <section id="chat" class="screen">
+      <div class="topbar"><button class="back">‹</button><h2>Talk to Niko</h2></div>
+      <div id="messages" class="messages"></div>
+      <form id="chatForm" class="composer">
+        <input id="messageInput" autocomplete="off" placeholder="Message Niko…">
+        <button>➤</button>
+      </form>
+    </section>
+
+    <section id="languages" class="screen">
+      <div class="topbar"><button class="back">‹</button><h2>Languages</h2></div>
+      <p>Choose a language to practice.</p>
+      <div class="language-list">
+        <button data-lang="Turkish">🇹🇷 Turkish</button>
+        <button data-lang="German">🇩🇪 German</button>
+        <button data-lang="Korean">🇰🇷 Korean</button>
+        <button data-lang="Urdu">🇵🇰 Urdu</button>
+        <button data-lang="English">🇬🇧 English</button>
+      </div>
+      <p id="languageStatus" class="muted"></p>
+    </section>
+
+    <section id="memory" class="screen">
+      <div class="topbar"><button class="back">‹</button><h2>My Memory</h2></div>
+      <form id="memoryForm" class="composer">
+        <input id="memoryInput" placeholder="Tell Niko what to remember…">
+        <button>Save</button>
+      </form>
+      <div id="memoryList"></div>
+    </section>
+
+    <section id="medical" class="screen">
+      <div class="topbar"><button class="back">‹</button><h2>Medical</h2></div>
+      <div class="card">
+        <h3>🩺 Medical information</h3>
+        <p>Niko can explain health topics and help you understand medical information. It is not a doctor and should not be used as a diagnosis.</p>
+        <p><b>If someone is in immediate danger or has a severe/rapidly worsening problem, contact local emergency services or a qualified medical professional.</b></p>
+      </div>
+    </section>
+
+    <section id="emergency" class="screen">
+      <div class="topbar"><button class="back">‹</button><h2>Emergency</h2></div>
+      <div class="emergency-card">
+        <div>🚨</div>
+        <h2>Get real-world help</h2>
+        <p>Niko cannot replace emergency services. If someone is in immediate danger, contact your local emergency service now.</p>
+        <a class="call" href="tel:112">Call 112</a>
+        <p class="muted">112 is India's unified emergency number.</p>
+      </div>
+    </section>
+  </main>
+<script src="app.js"></script>
+</body>
+</html>
