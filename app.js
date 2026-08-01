@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://niko-backend-xqhb.onrender.com";
+const BACKEND_URL = "https://niko-backend-1.onrender.com";
 
 const screens = [...document.querySelectorAll(".screen")];
 
