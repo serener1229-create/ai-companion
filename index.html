@@ -8,7 +8,7 @@
     content="width=device-width, initial-scale=1, viewport-fit=cover"
   >
 
-  <meta name="theme-color" content="#f6f7fb">
+  <meta name="theme-color" content="#080A18">
 
   <meta
     name="apple-mobile-web-app-capable"
@@ -17,7 +17,7 @@
 
   <meta
     name="apple-mobile-web-app-status-bar-style"
-    content="default"
+    content="black-translucent"
   >
 
   <link rel="manifest" href="manifest.json">
@@ -58,12 +58,11 @@
         N
       </div>
 
-      <h2>Hi, I'm Niko. 👋</h2>
+      <h2>Hey, I'm Niko ✨</h2>
 
       <p>
-        I'm here to help you learn, explore ideas,
-        practice languages, and keep track of things
-        you want me to remember.
+        Your AI companion for learning,
+        languages, questions and ideas.
       </p>
 
     </div>
@@ -74,38 +73,29 @@
 
       <button data-screen="chat">
         💬
-        <b>Ask Niko</b>
-        <span>Chat, questions & explanations</span>
+        <b>Talk to Niko</b>
+        <span>Ask questions and chat</span>
       </button>
 
       <button data-screen="languages">
         🌍
         <b>Languages</b>
-        <span>Practice Turkish, German, Korean & Urdu</span>
+        <span>Turkish · German · Korean · Urdu</span>
       </button>
 
       <button data-screen="memory">
         🧠
         <b>My Memory</b>
-        <span>Things you've chosen to save</span>
+        <span>Things Niko remembers</span>
       </button>
 
       <button data-screen="medical">
         🩺
         <b>Health</b>
-        <span>General health information & safety</span>
+        <span>General health information</span>
       </button>
 
     </div>
-
-
-    <!-- EMERGENCY -->
-    <button
-      class="emergency"
-      data-screen="emergency"
-    >
-      🚨 &nbsp; Emergency Help
-    </button>
 
   </section>
 
@@ -185,7 +175,8 @@
       <h3>🌍 Practice a language</h3>
 
       <p class="muted">
-        Choose a language and start practicing with Niko.
+        Choose a language and start practicing
+        with Niko.
       </p>
 
     </div>
@@ -251,7 +242,8 @@
       <h3>🧠 Niko's Memory</h3>
 
       <p class="muted">
-        Save information that you want Niko to remember.
+        Save information that you want Niko
+        to remember.
       </p>
 
     </div>
@@ -281,7 +273,7 @@
   </section>
 
 
-  <!-- MEDICAL -->
+  <!-- HEALTH -->
   <section id="medical" class="screen">
 
     <div class="topbar">
@@ -305,8 +297,8 @@
       <h3>🩺 Health information</h3>
 
       <p>
-        Niko can help explain health topics and
-        medical information in simple language.
+        Niko can help explain health topics
+        and medical information in simple language.
       </p>
 
       <p class="muted">
@@ -314,69 +306,24 @@
         medical conditions.
       </p>
 
-      <hr style="border:0;border-top:1px solid #eee;margin:18px 0">
+      <hr
+        style="
+          border:0;
+          border-top:1px solid rgba(255,255,255,0.1);
+          margin:18px 0
+        "
+      >
 
       <p>
-        <b>
-          If someone is in immediate danger or has
-          a severe or rapidly worsening problem,
-          contact local emergency services or a
-          qualified medical professional.
-        </b>
+        For serious or rapidly worsening health
+        problems, seek help from a qualified
+        medical professional.
       </p>
 
     </div>
 
   </section>
 
-
-  <!-- EMERGENCY -->
-  <section id="emergency" class="screen">
-
-    <div class="topbar">
-
-      <button
-        class="back"
-        aria-label="Go back"
-      >
-        ‹
-      </button>
-
-      <h2>Emergency</h2>
-
-      <div style="width:44px"></div>
-
-    </div>
-
-
-    <div class="emergency-card">
-
-      <div style="font-size:52px">
-        🚨
-      </div>
-
-      <h2>Get real-world help</h2>
-
-      <p>
-        Niko cannot replace emergency services.
-        If someone is in immediate danger,
-        contact emergency services now.
-      </p>
-
-      <a
-        class="call"
-        href="tel:112"
-      >
-        Call 112
-      </a>
-
-      <p class="muted">
-        India's unified emergency number.
-      </p>
-
-    </div>
-
-  </section>
 
 </main>
 
