@@ -558,3 +558,129 @@ if ("serviceWorker" in navigator) {
 // ===============================
 
 openPage("home");
+// ==========================================
+// FLOATING NIKO ASSISTANT
+// ==========================================
+
+const nikoFloatButton =
+  document.getElementById("nikoFloatButton");
+
+const nikoVoicePanel =
+  document.getElementById("nikoVoicePanel");
+
+const nikoMicButton =
+  document.getElementById("nikoMicButton");
+
+const voiceStatus =
+  document.getElementById("voiceStatus");
+
+
+// Open / close assistant panel
+
+if (nikoFloatButton) {
+
+  nikoFloatButton.addEventListener("click", () => {
+
+    nikoVoicePanel.classList.toggle("open");
+
+  });
+
+}
+
+
+// Voice assistant
+
+if (nikoMicButton && recognition) {
+
+  nikoMicButton.addEventListener("click", () => {
+
+    try {
+
+      recognition.start();
+
+      nikoMicButton.classList.add("listening");
+
+      voiceStatus.textContent =
+        "Listening…";
+
+    } catch {
+
+      voiceStatus.textContent =
+        "Already listening…";
+
+    }
+
+  });
+
+
+  recognition.onstart = () => {
+
+    nikoMicButton.classList.add("listening");
+
+    voiceStatus.textContent =
+      "Listening…";
+
+  };
+
+
+  recognition.onend = () => {
+
+    nikoMicButton.classList.remove(
+      "listening"
+    );
+
+    voiceStatus.textContent =
+      "Tap to talk";
+
+  };
+
+
+  recognition.onerror = () => {
+
+    nikoMicButton.classList.remove(
+      "listening"
+    );
+
+    voiceStatus.textContent =
+      "Couldn't hear you";
+
+  };
+
+}
+
+
+// When voice produces text,
+// automatically go to chat
+
+if (recognition) {
+
+  recognition.onresult = event => {
+
+    const transcript =
+      event.results[0][0].transcript;
+
+
+    openPage("chat");
+
+
+    if (messageInput) {
+
+      messageInput.value =
+        transcript;
+
+      chatForm.requestSubmit();
+
+    }
+
+
+    if (nikoVoicePanel) {
+
+      nikoVoicePanel.classList.remove(
+        "open"
+      );
+
+    }
+
+  };
+
+}
