@@ -1,318 +1,205 @@
-const BACKEND_URL =
-  "https://niko-backend-1.onrender.com";
+const BACKEND_URL = "https://niko-backend-1.onrender.com";
 
 
-// ==========================================
+// ===============================
 // PAGE NAVIGATION
-// ==========================================
+// ===============================
 
-const pages =
-  document.querySelectorAll(".page");
+const pages = [...document.querySelectorAll(".page")];
+const navItems = [...document.querySelectorAll(".nav-item")];
 
-const navItems =
-  document.querySelectorAll(".nav-item");
-
-
-function openPage(pageId) {
+function showPage(id) {
 
   pages.forEach(page => {
-
-    page.classList.toggle(
-      "active",
-      page.id === pageId
-    );
-
+    page.classList.toggle("active", page.id === id);
   });
-
 
   navItems.forEach(item => {
-
     item.classList.toggle(
       "active",
-      item.dataset.page === pageId
+      item.dataset.page === id
     );
-
   });
-
 
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
-
 }
 
 
-// All page buttons
+// Buttons that open pages
+document.querySelectorAll("[data-page]").forEach(button => {
 
-document
-  .querySelectorAll("[data-page]")
-  .forEach(button => {
+  button.addEventListener("click", () => {
 
-    button.addEventListener(
-      "click",
-      () => {
+    const page = button.dataset.page;
 
-        openPage(
-          button.dataset.page
-        );
-
-      }
-    );
+    if (page) {
+      showPage(page);
+    }
 
   });
+
+});
 
 
 // Back buttons
+document.querySelectorAll(".back").forEach(button => {
 
-document
-  .querySelectorAll(".back")
-  .forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        openPage("home");
-
-      }
-    );
-
+  button.addEventListener("click", () => {
+    showPage("home");
   });
 
+});
 
 
-// ==========================================
+// ===============================
 // CHAT
-// ==========================================
+// ===============================
 
-const messages =
-  document.getElementById("messages");
+const messages = document.getElementById("messages");
 
-const chatForm =
-  document.getElementById("chatForm");
+function addMessage(text, mine = false) {
 
-const messageInput =
-  document.getElementById("messageInput");
-
-
-function addMessage(
-  text,
-  mine = false
-) {
-
-  if (!messages) return;
-
-  const bubble =
-    document.createElement("div");
+  const bubble = document.createElement("div");
 
   bubble.className =
-    "bubble " +
-    (mine ? "me" : "niko");
+    "bubble " + (mine ? "me" : "niko");
 
   bubble.textContent = text;
 
   messages.appendChild(bubble);
 
-  messages.scrollTop =
-    messages.scrollHeight;
-
+  messages.scrollTop = messages.scrollHeight;
 }
 
 
-// First Niko message
-
-if (messages) {
-
-  addMessage(
-    "Hey. I'm Niko. What are you thinking about?"
-  );
-
-}
+// Initial message
+addMessage(
+  "Hi. I'm Niko. What would you like to talk about?"
+);
 
 
-// Send message
+document.getElementById("chatForm").addEventListener(
+  "submit",
+  async event => {
 
-if (chatForm) {
+    event.preventDefault();
 
-  chatForm.addEventListener(
-    "submit",
-    async event => {
+    const input =
+      document.getElementById("messageInput");
 
-      event.preventDefault();
+    const text = input.value.trim();
 
+    if (!text) return;
 
-      const text =
-        messageInput.value.trim();
+    input.value = "";
 
+    addMessage(text, true);
 
-      if (!text) return;
+    addMessage("Thinking...");
 
+    const thinking =
+      messages.lastElementChild;
 
-      messageInput.value = "";
+    try {
 
+      const response = await fetch(
+        BACKEND_URL + "/chat",
+        {
+          method: "POST",
 
-      addMessage(
-        text,
-        true
-      );
+          headers: {
+            "Content-Type": "application/json"
+          },
 
-
-      const thinking =
-        document.createElement("div");
-
-      thinking.className =
-        "bubble niko";
-
-      thinking.textContent =
-        "Thinking…";
-
-
-      messages.appendChild(
-        thinking
-      );
-
-
-      messages.scrollTop =
-        messages.scrollHeight;
-
-
-      try {
-
-        const response =
-          await fetch(
-            BACKEND_URL + "/chat",
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-
-              body: JSON.stringify({
-                message: text
-              })
-            }
-          );
-
-
-        if (!response.ok) {
-          throw new Error(
-            "Server error"
-          );
+          body: JSON.stringify({
+            message: text
+          })
         }
+      );
 
 
-        const data =
-          await response.json();
-
-
-        thinking.remove();
-
-
-        const reply =
-          data.reply ||
-          "I couldn't get a response.";
-
-
-        addMessage(reply);
-
-
-        speak(reply);
-
-
-      } catch (error) {
-
-        thinking.remove();
-
-
-        addMessage(
-          "I can't reach Niko's server right now. Please try again in a moment."
-        );
-
+      if (!response.ok) {
+        throw new Error("Server error");
       }
+
+
+      const data = await response.json();
+
+      thinking.remove();
+
+
+      const reply =
+        data.reply ||
+        "I couldn't get a response from Niko.";
+
+      addMessage(reply);
+
+      speak(reply);
 
     }
-  );
 
-}
+    catch (error) {
 
+      thinking.remove();
 
+      addMessage(
+        "I can't reach Niko's server right now. Please try again in a moment."
+      );
 
-// ==========================================
-// LANGUAGES
-// ==========================================
+    }
 
-const languageStatus =
-  document.getElementById(
-    "languageStatus"
-  );
-
-
-document
-  .querySelectorAll("[data-lang]")
-  .forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        const language =
-          button.dataset.lang;
+  }
+);
 
 
-        if (languageStatus) {
+// ===============================
+// LANGUAGE PRACTICE
+// ===============================
 
-          languageStatus.textContent =
-            `Niko is ready for ${language}.`;
+document.querySelectorAll("[data-lang]").forEach(button => {
 
-        }
+  button.addEventListener("click", () => {
 
+    const language =
+      button.dataset.lang;
 
-        openPage("chat");
+    const status =
+      document.getElementById(
+        "languageStatus"
+      );
 
+    status.textContent =
+      `Niko is ready for ${language}. Opening chat...`;
 
-        if (messageInput) {
+    setTimeout(() => {
 
-          messageInput.value =
-            `Let's practice ${language}.`;
+      showPage("chat");
 
-          messageInput.focus();
+      const input =
+        document.getElementById(
+          "messageInput"
+        );
 
-        }
+      input.value =
+        `Let's practice ${language}.`;
 
-      }
-    );
+      input.focus();
+
+    }, 350);
 
   });
 
+});
 
 
-// ==========================================
+// ===============================
 // MEMORY
-// ==========================================
+// ===============================
 
-const MEMORY_KEY =
-  "nikoMemories";
-
-
-const memoryForm =
-  document.getElementById(
-    "memoryForm"
-  );
-
-
-const memoryInput =
-  document.getElementById(
-    "memoryInput"
-  );
-
-
-const memoryList =
-  document.getElementById(
-    "memoryList"
-  );
+const memoryKey = "nikoMemories";
 
 
 function getMemories() {
@@ -320,12 +207,12 @@ function getMemories() {
   try {
 
     return JSON.parse(
-      localStorage.getItem(
-        MEMORY_KEY
-      ) || "[]"
+      localStorage.getItem(memoryKey) || "[]"
     );
 
-  } catch {
+  }
+
+  catch {
 
     return [];
 
@@ -334,12 +221,10 @@ function getMemories() {
 }
 
 
-function saveMemories(
-  memories
-) {
+function saveMemories(memories) {
 
   localStorage.setItem(
-    MEMORY_KEY,
+    memoryKey,
     JSON.stringify(memories)
   );
 
@@ -348,14 +233,13 @@ function saveMemories(
 
 function renderMemory() {
 
-  if (!memoryList) return;
-
+  const list =
+    document.getElementById("memoryList");
 
   const memories =
     getMemories();
 
-
-  memoryList.innerHTML = "";
+  list.innerHTML = "";
 
 
   if (memories.length === 0) {
@@ -364,134 +248,117 @@ function renderMemory() {
       document.createElement("div");
 
     empty.className =
-      "memory-empty";
+      "memory-item";
 
     empty.textContent =
       "Nothing saved yet.";
 
-    memoryList.appendChild(
-      empty
-    );
+    list.appendChild(empty);
 
     return;
 
   }
 
 
-  memories.forEach(
-    (memory, index) => {
+  memories.forEach((memory, index) => {
 
-      const card =
-        document.createElement("div");
+    const item =
+      document.createElement("div");
 
-      card.className =
-        "memory-item";
-
-
-      const text =
-        document.createElement("span");
-
-      text.textContent =
-        memory;
+    item.className =
+      "memory-item";
 
 
-      const deleteButton =
-        document.createElement(
-          "button"
-        );
+    const text =
+      document.createElement("span");
 
-      deleteButton.textContent =
-        "×";
+    text.textContent =
+      memory;
 
 
-      deleteButton.addEventListener(
-        "click",
-        () => {
+    const deleteButton =
+      document.createElement("button");
 
-          const current =
-            getMemories();
+    deleteButton.className =
+      "memory-delete";
 
+    deleteButton.textContent =
+      "×";
 
-          current.splice(
-            index,
-            1
-          );
-
-
-          saveMemories(
-            current
-          );
+    deleteButton.setAttribute(
+      "aria-label",
+      "Delete memory"
+    );
 
 
-          renderMemory();
+    deleteButton.addEventListener(
+      "click",
+      () => {
 
-        }
-      );
+        const current =
+          getMemories();
+
+        current.splice(index, 1);
+
+        saveMemories(current);
+
+        renderMemory();
+
+      }
+    );
 
 
-      card.appendChild(text);
+    item.appendChild(text);
 
-      card.appendChild(
-        deleteButton
-      );
+    item.appendChild(deleteButton);
 
-      memoryList.appendChild(
-        card
-      );
+    list.appendChild(item);
 
-    }
-  );
+  });
 
 }
 
 
-if (memoryForm) {
+document.getElementById(
+  "memoryForm"
+).addEventListener(
+  "submit",
+  event => {
 
-  memoryForm.addEventListener(
-    "submit",
-    event => {
+    event.preventDefault();
 
-      event.preventDefault();
-
-
-      const value =
-        memoryInput.value.trim();
-
-
-      if (!value) return;
-
-
-      const memories =
-        getMemories();
-
-
-      memories.push(value);
-
-
-      saveMemories(
-        memories
+    const input =
+      document.getElementById(
+        "memoryInput"
       );
 
+    const value =
+      input.value.trim();
 
-      memoryInput.value =
-        "";
+    if (!value) return;
 
 
-      renderMemory();
+    const memories =
+      getMemories();
 
-    }
-  );
+    memories.push(value);
 
-}
+    saveMemories(memories);
+
+    input.value = "";
+
+    renderMemory();
+
+  }
+);
 
 
 renderMemory();
 
 
-
-// ==========================================
+// ===============================
 // NIKO SPEECH
-// ==========================================
+// ===============================
 
 function speak(text) {
 
@@ -499,9 +366,7 @@ function speak(text) {
     !("speechSynthesis" in window) ||
     !text
   ) {
-
     return;
-
   }
 
 
@@ -509,25 +374,29 @@ function speak(text) {
 
 
   const utterance =
-    new SpeechSynthesisUtterance(
-      text
+    new SpeechSynthesisUtterance(text);
+
+  utterance.lang = "en-US";
+
+  utterance.rate = 0.95;
+
+  utterance.pitch = 1;
+
+
+  const voices =
+    speechSynthesis.getVoices();
+
+
+  const preferred =
+    voices.find(voice =>
+      /Samantha|Google US English|Microsoft/i
+        .test(voice.name)
     );
 
 
-  utterance.lang =
-    "en-US";
-
-
-  utterance.rate =
-    0.95;
-
-
-  utterance.pitch =
-    1.0;
-
-
-  utterance.volume =
-    1.0;
+  if (preferred) {
+    utterance.voice = preferred;
+  }
 
 
   speechSynthesis.speak(
@@ -537,95 +406,28 @@ function speak(text) {
 }
 
 
-
-// ==========================================
-// VOICE RECOGNITION
-// ==========================================
-
-const SpeechRecognition =
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
+// Some browsers load voices later
+speechSynthesis.onvoiceschanged =
+  () => {
+    speechSynthesis.getVoices();
+  };
 
 
-let recognition = null;
+// ===============================
+// VOICE INPUT
+// ===============================
+
+function startVoice() {
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
 
 
-if (SpeechRecognition) {
-
-  recognition =
-    new SpeechRecognition();
-
-
-  recognition.lang =
-    "en-US";
-
-
-  recognition.continuous =
-    false;
-
-
-  recognition.interimResults =
-    false;
-
-}
-
-
-
-// ==========================================
-// FLOATING NIKO
-// ==========================================
-
-const nikoFloatButton =
-  document.getElementById(
-    "nikoFloatButton"
-  );
-
-
-const nikoVoicePanel =
-  document.getElementById(
-    "nikoVoicePanel"
-  );
-
-
-const nikoMicButton =
-  document.getElementById(
-    "nikoMicButton"
-  );
-
-
-const voiceStatus =
-  document.getElementById(
-    "voiceStatus"
-  );
-
-
-// Open floating panel
-
-if (nikoFloatButton) {
-
-  nikoFloatButton.addEventListener(
-    "click",
-    () => {
-
-      nikoVoicePanel.classList.toggle(
-        "open"
-      );
-
-    }
-  );
-
-}
-
-
-
-// Start listening
-
-function startListening() {
-
-  if (!recognition) {
+  if (!SpeechRecognition) {
 
     alert(
-      "Voice input isn't supported in this browser."
+      "Voice input isn't supported by this browser."
     );
 
     return;
@@ -633,209 +435,109 @@ function startListening() {
   }
 
 
-  try {
-
-    recognition.start();
-
-  } catch {
-
-    // Already listening
-
-  }
-
-}
+  const recognition =
+    new SpeechRecognition();
 
 
-if (nikoMicButton) {
+  recognition.lang =
+    "en-US";
 
-  nikoMicButton.addEventListener(
-    "click",
-    startListening
-  );
+  recognition.interimResults =
+    false;
 
-}
+  recognition.continuous =
+    false;
 
-
-
-// Voice started
-
-if (recognition) {
 
   recognition.onstart =
     () => {
 
-      nikoMicButton?.classList.add(
-        "listening"
-      );
+      const status =
+        document.querySelector(
+          ".voice-status"
+        );
 
-
-      if (voiceStatus) {
-
-        voiceStatus.textContent =
-          "Listening…";
-
+      if (status) {
+        status.textContent =
+          "LISTENING...";
       }
 
     };
-
 
 
   recognition.onresult =
     event => {
 
       const transcript =
-        event
-          .results[0][0]
+        event.results[0][0]
           .transcript;
 
 
-      openPage("chat");
+      showPage("chat");
 
 
-      if (messageInput) {
-
-        messageInput.value =
-          transcript;
-
-        chatForm.requestSubmit();
-
-      }
+      const input =
+        document.getElementById(
+          "messageInput"
+        );
 
 
-      nikoVoicePanel?.classList.remove(
-        "open"
-      );
-
-    };
+      input.value =
+        transcript;
 
 
-
-  recognition.onend =
-    () => {
-
-      nikoMicButton?.classList.remove(
-        "listening"
-      );
-
-
-      if (voiceStatus) {
-
-        voiceStatus.textContent =
-          "Tap to talk";
-
-      }
+      document.getElementById(
+        "chatForm"
+      ).requestSubmit();
 
     };
-
 
 
   recognition.onerror =
     () => {
 
-      nikoMicButton?.classList.remove(
-        "listening"
-      );
+      const status =
+        document.querySelector(
+          ".voice-status"
+        );
 
-
-      if (voiceStatus) {
-
-        voiceStatus.textContent =
-          "Couldn't hear you";
-
+      if (status) {
+        status.textContent =
+          "VOICE READY";
       }
 
     };
 
-}
 
-
-
-// ==========================================
-// VOICE PAGE BUTTON
-// ==========================================
-
-const voiceListenButton =
-  document.getElementById(
-    "voiceListenButton"
-  );
-
-
-if (voiceListenButton) {
-
-  voiceListenButton.addEventListener(
-    "click",
+  recognition.onend =
     () => {
 
-      startListening();
+      const status =
+        document.querySelector(
+          ".voice-status"
+        );
 
-    }
-  );
+      if (status) {
+        status.textContent =
+          "VOICE READY";
+      }
+
+    };
+
+
+  recognition.start();
 
 }
 
 
-
-// ==========================================
-// KEYBOARD SHORTCUTS
-// ==========================================
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key === "Escape"
-    ) {
-
-      openPage("home");
-
-    }
-
-
-    if (
-      event.key === "/" &&
-      document.activeElement !==
-        messageInput
-    ) {
-
-      event.preventDefault();
-
-      openPage("chat");
-
-      messageInput?.focus();
-
-    }
-
-  }
-);
-
-
-
-// ==========================================
+// ===============================
 // SERVICE WORKER
-// ==========================================
+// ===============================
 
-if (
-  "serviceWorker" in navigator
-) {
+if ("serviceWorker" in navigator) {
 
-  window.addEventListener(
-    "load",
-    () => {
-
-      navigator.serviceWorker
-        .register("sw.js")
-        .catch(() => {});
-
-    }
-  );
+  navigator.serviceWorker
+    .register("sw.js")
+    .catch(() => {});
 
 }
-
-
-
-// ==========================================
-// START
-// ==========================================
-
-openPage("home");
