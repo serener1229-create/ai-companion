@@ -1,97 +1,9 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#7f8ee8">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-
-  <title>Niko — AI Companion</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css">
-</head>
-
-<body>
-
-<main class="app">
-
-  <!-- HOME -->
-  <section id="home" class="page active">
-
-    <div class="top">
-      <div>
-        <p class="small-label">YOUR AI COMPANION</p>
-        <h1>Hi, I'm Niko! 👋</h1>
-        <p id="wakeStatus" class="wake-status">
-          Say “Niko” whenever you want me.
-        </p>
-      </div>
-
-      <div class="mini-orb">N</div>
-    </div>
-
-    <div class="hero-card">
-
-      <div class="doodle doodle-star">✦</div>
-      <div class="doodle doodle-dot">●</div>
-      <div class="doodle doodle-heart">♡</div>
-
-      <div class="niko-character">
-        <div class="antenna"></div>
-
-        <div class="face">
-          <span>•</span>
-          <span>•</span>
-          <div class="smile">⌣</div>
+tting-icon">i</span>
+        <div>
+          <strong>About Niko</strong>
+          <small>Version and information</small>
         </div>
-
-        <div class="arm left-arm"></div>
-        <div class="arm right-arm"></div>
-
-        <div class="leg left-leg"></div>
-        <div class="leg right-leg"></div>
-      </div>
-
-      <h2>Let's do something<br>great today!</h2>
-
-      <p>
-        Ask questions, learn languages,
-        save memories and explore ideas.
-      </p>
-
-      <button class="main-button" data-page="chat">
-        Let's talk →
-      </button>
-
-    </div>
-
-
-    <h3 class="section-title">What can I do?</h3>
-
-    <div class="feature-grid">
-
-      <button class="feature purple" data-page="chat">
-        <div class="feature-icon">💬</div>
-        <strong>Talk to Niko</strong>
-        <span>Ask anything</span>
-      </button>
-
-      <button class="feature pink" data-page="languages">
-        <div class="feature-icon">🌍</div>
-        <strong>Languages</strong>
-        <span>Practice together</span>
-      </button>
-
-      <button class="feature green" data-page="memory">
-        <div class="feature-icon">🧠</div>
-        <strong>My Memory</strong>
-        <span>Things Niko remembers</span>
-      </button>
-
-      <button class="feature yellow" data-page="health">
-        <div class="feature-icon">🩺</div>
-        <strong>Health</strong>
-        <span>Learn & understand</span>
+        <b>→</b>
       </button>
 
     </div>
@@ -99,163 +11,137 @@
   </section>
 
 
-  <!-- CHAT -->
-  <section id="chat" class="page">
+  <!-- ================= VOICE ================= -->
+
+  <section id="voice" class="page">
 
     <div class="page-header">
-      <button class="back">←</button>
-      <h2>Talk to Niko</h2>
-      <div class="header-spacer"></div>
-    </div>
 
-    <div class="chat-character">
-      <div class="small-character">N</div>
+      <button class="back">←</button>
+
       <div>
-        <strong>Niko</strong>
-        <span>Online</span>
+        <div class="eyebrow">VOICE</div>
+        <h2>Niko Voice</h2>
       </div>
-    </div>
 
-    <div id="messages" class="messages"></div>
-
-    <form id="chatForm" class="composer">
-      <input
-        id="messageInput"
-        autocomplete="off"
-        placeholder="Write something..."
-      >
-      <button type="submit">➤</button>
-    </form>
-
-  </section>
-
-
-  <!-- LANGUAGES -->
-  <section id="languages" class="page">
-
-    <div class="page-header">
-      <button class="back">←</button>
-      <h2>Languages 🌍</h2>
-      <div class="header-spacer"></div>
-    </div>
-
-    <div class="intro-card pink-card">
-      <div class="big-emoji">🌎</div>
-      <h3>Let's learn together!</h3>
-      <p>Pick a language and start practicing with Niko.</p>
-    </div>
-
-    <div class="language-grid">
-
-      <button data-lang="Turkish">
-        <b>🇹🇷 Turkish</b>
-        <span>Türkçe</span>
-      </button>
-
-      <button data-lang="German">
-        <b>🇩🇪 German</b>
-        <span>Deutsch</span>
-      </button>
-
-      <button data-lang="Korean">
-        <b>🇰🇷 Korean</b>
-        <span>한국어</span>
-      </button>
-
-      <button data-lang="Urdu">
-        <b>🇵🇰 Urdu</b>
-        <span>اردو</span>
-      </button>
-
-      <button data-lang="English">
-        <b>🇬🇧 English</b>
-        <span>Let's practice</span>
-      </button>
+      <div class="page-symbol">◉</div>
 
     </div>
 
-    <p id="languageStatus" class="status"></p>
 
-  </section>
+    <div class="voice-card">
 
+      <div class="voice-orb">
+        N
+      </div>
 
-  <!-- MEMORY -->
-  <section id="memory" class="page">
-
-    <div class="page-header">
-      <button class="back">←</button>
-      <h2>Niko's Memory 🧠</h2>
-      <div class="header-spacer"></div>
-    </div>
-
-    <div class="intro-card green-card">
-
-      <div class="big-emoji">💭</div>
-
-      <h3>Things worth remembering</h3>
+      <h3>Talk naturally.</h3>
 
       <p>
-        Save something here and Niko will keep it
-        on this device.
+        Niko can use your device's speech
+        recognition and voice synthesis.
       </p>
 
-    </div>
-
-    <form id="memoryForm" class="memory-form">
-
-      <input
-        id="memoryInput"
-        placeholder="Tell Niko something..."
-        autocomplete="off"
+      <button
+        class="voice-test"
+        onclick="speak('Hi. I am Niko.')"
       >
+        Test Niko's voice
+      </button>
 
-      <button>Save</button>
-
-    </form>
-
-    <div id="memoryList"></div>
+    </div>
 
   </section>
 
 
-  <!-- HEALTH -->
-  <section id="health" class="page">
+  <!-- ================= ABOUT ================= -->
+
+  <section id="about" class="page">
 
     <div class="page-header">
-      <button class="back">←</button>
-      <h2>Health 🩺</h2>
-      <div class="header-spacer"></div>
-    </div>
 
-    <div class="health-character">
-      <div class="health-face">
-        <span>•</span>
-        <span>•</span>
-        <div>⌣</div>
+      <button class="back">←</button>
+
+      <div>
+        <div class="eyebrow">NIKO</div>
+        <h2>About</h2>
       </div>
 
-      <div class="health-cross">+</div>
+      <div class="page-symbol">N</div>
+
     </div>
 
-    <div class="health-card">
 
-      <h3>Let's understand health.</h3>
+    <div class="about-card">
+
+      <div class="about-orb">
+        N
+      </div>
+
+      <h2>Niko</h2>
 
       <p>
-        Niko can explain health topics and medical
-        information in simple language.
+        Your personal AI companion for learning,
+        exploring ideas, practicing languages
+        and organizing information.
       </p>
 
-      <div class="notice">
-        Niko is not a doctor and cannot diagnose
-        medical conditions.
+      <div class="version">
+        NIKO · FREE EDITION
       </div>
 
     </div>
 
   </section>
 
-</main>
+
+  <!-- ================= BOTTOM NAV ================= -->
+
+  <nav class="bottom-nav">
+
+    <button
+      data-page="home"
+      class="nav-item active"
+    >
+      <span>⌂</span>
+      <small>Home</small>
+    </button>
+
+    <button
+      data-page="chat"
+      class="nav-item"
+    >
+      <span>◉</span>
+      <small>Chat</small>
+    </button>
+
+    <button
+      data-page="languages"
+      class="nav-item"
+    >
+      <span>◇</span>
+      <small>Learn</small>
+    </button>
+
+    <button
+      data-page="memory"
+      class="nav-item"
+    >
+      <span>⌁</span>
+      <small>Memory</small>
+    </button>
+
+    <button
+      data-page="settings"
+      class="nav-item"
+    >
+      <span>⋯</span>
+      <small>More</small>
+    </button>
+
+  </nav>
+
+</div>
 
 <script src="app.js"></script>
 
