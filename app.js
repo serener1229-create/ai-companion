@@ -10,7 +10,10 @@ function showPage(id) {
   window.scrollTo(0, 0);
 }
 
-/* PAGE NAVIGATION */
+
+/* =========================
+   PAGE NAVIGATION
+========================= */
 
 document.querySelectorAll("[data-page]").forEach(button => {
   button.addEventListener("click", () => {
@@ -25,7 +28,9 @@ document.querySelectorAll(".back").forEach(button => {
 });
 
 
-/* CHAT */
+/* =========================
+   CHAT
+========================= */
 
 const messages = document.getElementById("messages");
 
@@ -38,14 +43,13 @@ function addMessage(text, mine = false) {
   bubble.textContent = text;
 
   messages.appendChild(bubble);
-
   messages.scrollTop = messages.scrollHeight;
 
   return bubble;
 }
 
 addMessage(
-  "Hi! I'm Niko 👋 What would you like to talk about?"
+  "Hi! I'm Niko 👋 Say “Niko” when you want to talk to me."
 );
 
 
@@ -111,119 +115,25 @@ document.getElementById("chatForm").addEventListener(
 );
 
 
-/* LANGUAGES */
+/* =========================
+   NIKO VOICE
+========================= */
 
-document.querySelectorAll("[data-lang]").forEach(button => {
+let availableVoices = [];
 
-  button.addEventListener("click", () => {
+function loadVoices() {
+  if (!("speechSynthesis" in window)) return;
 
-    const language = button.dataset.lang;
-
-    document.getElementById(
-      "languageStatus"
-    ).textContent =
-      `🌟 Niko is ready for ${language}! Go to Talk to Niko and say "Let's practice ${language}."`;
-
-  });
-
-});
-
-
-/* MEMORY */
-
-const memoryKey = "nikoMemories";
-
-function renderMemory() {
-
-  const list =
-    document.getElementById("memoryList");
-
-  const memories =
-    JSON.parse(
-      localStorage.getItem(memoryKey) || "[]"
-    );
-
-  list.innerHTML = "";
-
-  memories.forEach((memory, index) => {
-
-    const card =
-      document.createElement("div");
-
-    card.className = "card";
-
-    const text =
-      document.createElement("span");
-
-    text.textContent = "💭 " + memory;
-
-    const deleteButton =
-      document.createElement("button");
-
-    deleteButton.textContent = "🗑️";
-
-    deleteButton.style.float = "right";
-    deleteButton.style.border = "0";
-    deleteButton.style.background = "transparent";
-    deleteButton.style.cursor = "pointer";
-
-    deleteButton.onclick = () => {
-
-      memories.splice(index, 1);
-
-      localStorage.setItem(
-        memoryKey,
-        JSON.stringify(memories)
-      );
-
-      renderMemory();
-    };
-
-    card.appendChild(text);
-    card.appendChild(deleteButton);
-
-    list.appendChild(card);
-
-  });
+  availableVoices =
+    window.speechSynthesis.getVoices();
 }
 
+loadVoices();
 
-document.getElementById("memoryForm").addEventListener(
-  "submit",
-  event => {
+if ("speechSynthesis" in window) {
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
 
-    event.preventDefault();
-
-    const input =
-      document.getElementById("memoryInput");
-
-    const value =
-      input.value.trim();
-
-    if (!value) return;
-
-    const memories =
-      JSON.parse(
-        localStorage.getItem(memoryKey) || "[]"
-      );
-
-    memories.push(value);
-
-    localStorage.setItem(
-      memoryKey,
-      JSON.stringify(memories)
-    );
-
-    input.value = "";
-
-    renderMemory();
-  }
-);
-
-renderMemory();
-
-
-/* NIKO VOICE */
 
 function speak(text) {
 
@@ -236,72 +146,626 @@ function speak(text) {
 
   speechSynthesis.cancel();
 
-  const voice =
+  const utterance =
     new SpeechSynthesisUtterance(text);
 
-  voice.lang = "en-US";
-  voice.rate = 0.95;
-  voice.pitch = 1.05;
-  voice.volume = 1;
+  utterance.lang = "en-US";
+  utterance.rate = 0.95;
+  utterance.pitch = 1.05;
+  utterance.volume = 1;
 
-  speechSynthesis.speak(voice);
+  /*
+    Prefer an English voice if the device provides one.
+  */
+
+  const englishVoice =
+    availableVoices.find(
+      voice =>
+        voice.lang &&
+        voice.lang.toLowerCase().startsWith("en")
+    );
+
+  if (englishVoice) {
+    utterance.voice = englishVoice;
+  }
+
+  speechSynthesis.speak(utterance);
 }
 
 
-/* VOICE INPUT */
+/* =========================
+   WAKE WORD: "NIKO"
+========================= */
 
-const speakButton =
-  document.getElementById("speakBtn");
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
 
-if (speakButton) {
+let wakeRecognition = null;
+let wakeListening = false;
+let commandRecognition = null;
 
-  speakButton.addEventListener(
-    "click",
-    () => {
+function createWakeRecognition() {
 
-      const SpeechRecognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    console.log(
+      "Speech recognition isn't supported in this browser."
+    );
 
-      if (!SpeechRecognition) {
+    return null;
+  }
 
-        alert(
-          "Voice input isn't supported in this browser."
-        );
+  const recognition =
+    new SpeechRecognition();
+
+  recognition.lang = "en-US";
+
+  /*
+    We only need short pieces of speech
+    while waiting for "Niko".
+  */
+
+  recognition.continuous = true;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 3;
+
+  recognition.onstart = () => {
+
+    wakeListening = true;
+
+    console.log(
+      "Niko wake-word listener is active."
+    );
+
+    updateWakeStatus("Listening for “Niko”…");
+  };
+
+
+  recognition.onresult = event => {
+
+    for (
+      let i = event.resultIndex;
+      i < event.results.length;
+      i++
+    ) {
+
+      const result =
+        event.results[i];
+
+      if (!result.isFinal) continue;
+
+      const transcript =
+        result[0].transcript
+          .trim()
+          .toLowerCase();
+
+      console.log(
+        "Heard:",
+        transcript
+      );
+
+      /*
+        Recognise:
+        "Niko"
+        "Hey Niko"
+        "Okay Niko"
+        "Hi Niko"
+      */
+
+      const wakeWord =
+        /\b(?:hey|hi|okay|ok)?\s*niko\b/i;
+
+      if (wakeWord.test(transcript)) {
+
+        activateNiko();
 
         return;
       }
+    }
+  };
 
-      const recognition =
-        new SpeechRecognition();
 
-      recognition.lang = "en-US";
-      recognition.interimResults = false;
+  recognition.onerror = event => {
 
-      recognition.onresult =
-        event => {
+    console.log(
+      "Wake recognition error:",
+      event.error
+    );
 
-          document.getElementById(
-            "messageInput"
-          ).value =
-            event.results[0][0].transcript;
+    wakeListening = false;
 
-          showPage("chat");
+    /*
+      Some browsers stop recognition automatically.
+      We restart it after a short delay.
+    */
 
-          document
-            .getElementById("chatForm")
-            .requestSubmit();
-        };
+    if (
+      event.error !== "not-allowed" &&
+      event.error !== "service-not-allowed"
+    ) {
 
-      recognition.start();
+      setTimeout(() => {
+        startWakeListener();
+      }, 1200);
+    }
+  };
+
+
+  recognition.onend = () => {
+
+    wakeListening = false;
+
+    /*
+      Keep the wake listener alive while
+      the Niko page is open.
+    */
+
+    if (
+      document.visibilityState === "visible"
+    ) {
+
+      setTimeout(() => {
+        startWakeListener();
+      }, 700);
+    }
+  };
+
+
+  return recognition;
+}
+
+
+function startWakeListener() {
+
+  if (!SpeechRecognition) return;
+
+  if (wakeListening) return;
+
+  if (
+    document.visibilityState !== "visible"
+  ) {
+    return;
+  }
+
+  if (!wakeRecognition) {
+    wakeRecognition =
+      createWakeRecognition();
+  }
+
+  if (!wakeRecognition) return;
+
+  try {
+
+    wakeRecognition.start();
+
+  } catch (error) {
+
+    /*
+      Browser can throw if start()
+      is called while already starting.
+    */
+
+    console.log(
+      "Wake listener:",
+      error.message
+    );
+  }
+}
+
+
+/* =========================
+   WHEN "NIKO" IS HEARD
+========================= */
+
+function activateNiko() {
+
+  console.log("Niko activated!");
+
+  /*
+    Stop the wake listener temporarily
+    so it doesn't hear the command twice.
+  */
+
+  stopWakeListener();
+
+  /*
+    Open the chat page.
+  */
+
+  showPage("chat");
+
+  /*
+    Niko acknowledges the wake word.
+  */
+
+  speak("Yes?");
+
+  updateWakeStatus("Niko is listening…");
+
+  /*
+    Wait briefly for "Yes?" to finish,
+    then listen for the actual command.
+  */
+
+  setTimeout(() => {
+
+    startCommandListener();
+
+  }, 900);
+}
+
+
+/* =========================
+   COMMAND LISTENER
+========================= */
+
+function startCommandListener() {
+
+  if (!SpeechRecognition) {
+
+    alert(
+      "Voice recognition isn't supported in this browser."
+    );
+
+    return;
+  }
+
+  if (commandRecognition) {
+
+    try {
+      commandRecognition.abort();
+    } catch (_) {}
+
+  }
+
+  commandRecognition =
+    new SpeechRecognition();
+
+  commandRecognition.lang =
+    "en-US";
+
+  commandRecognition.continuous =
+    false;
+
+  commandRecognition.interimResults =
+    false;
+
+  commandRecognition.maxAlternatives =
+    1;
+
+
+  commandRecognition.onstart = () => {
+
+    updateWakeStatus(
+      "🎙️ I'm listening…"
+    );
+  };
+
+
+  commandRecognition.onresult =
+    event => {
+
+      const command =
+        event.results[0][0].transcript.trim();
+
+      console.log(
+        "Niko command:",
+        command
+      );
+
+      if (!command) return;
+
+      document.getElementById(
+        "messageInput"
+      ).value = command;
+
+      /*
+        Send the recognized command
+        to your existing backend.
+      */
+
+      document
+        .getElementById("chatForm")
+        .requestSubmit();
+    };
+
+
+  commandRecognition.onerror =
+    event => {
+
+      console.log(
+        "Command recognition:",
+        event.error
+      );
+
+      updateWakeStatus(
+        "Say “Niko” whenever you want me."
+      );
+    };
+
+
+  commandRecognition.onend = () => {
+
+    commandRecognition = null;
+
+    updateWakeStatus(
+      "Say “Niko” whenever you want me."
+    );
+
+    /*
+      Start waiting for the wake word again.
+    */
+
+    setTimeout(() => {
+      startWakeListener();
+    }, 700);
+  };
+
+
+  try {
+
+    commandRecognition.start();
+
+  } catch (error) {
+
+    console.log(
+      "Could not start command recognition:",
+      error
+    );
+  }
+}
+
+
+/* =========================
+   STOP WAKE LISTENER
+========================= */
+
+function stopWakeListener() {
+
+  if (!wakeRecognition) return;
+
+  try {
+    wakeRecognition.stop();
+  } catch (_) {}
+
+  wakeListening = false;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+function updateWakeStatus(text) {
+
+  /*
+    This won't break anything if
+    you haven't added a status element yet.
+  */
+
+  const status =
+    document.getElementById(
+      "wakeStatus"
+    );
+
+  if (status) {
+    status.textContent = text;
+  }
+}
+
+
+/* =========================
+   START LISTENING AFTER
+   USER INTERACTION
+========================= */
+
+/*
+  Browsers may require microphone permission
+  to be granted from a user interaction.
+
+  Clicking anywhere on Niko starts the listener.
+*/
+
+document.addEventListener(
+  "click",
+  () => {
+
+    if (!wakeListening) {
+      startWakeListener();
+    }
+
+  },
+  { once: true }
+);
+
+
+/*
+  Also try when the page becomes visible.
+*/
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if (
+      document.visibilityState === "visible"
+    ) {
+
+      setTimeout(() => {
+        startWakeListener();
+      }, 500);
+
+    } else {
+
+      stopWakeListener();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   LANGUAGE PAGE
+========================= */
+
+document.querySelectorAll(
+  "[data-lang]"
+).forEach(button => {
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      const language =
+        button.dataset.lang;
+
+      document.getElementById(
+        "languageStatus"
+      ).textContent =
+        `🌟 Niko is ready for ${language}! Go to Talk to Niko and say "Let's practice ${language}."`;
 
     }
   );
 
+});
+
+
+/* =========================
+   MEMORY
+========================= */
+
+const memoryKey =
+  "nikoMemories";
+
+
+function renderMemory() {
+
+  const list =
+    document.getElementById(
+      "memoryList"
+    );
+
+  const memories =
+    JSON.parse(
+      localStorage.getItem(
+        memoryKey
+      ) || "[]"
+    );
+
+  list.innerHTML = "";
+
+  memories.forEach(
+    (memory, index) => {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className = "card";
+
+      const text =
+        document.createElement(
+          "span"
+        );
+
+      text.textContent =
+        "💭 " + memory;
+
+      const deleteButton =
+        document.createElement(
+          "button"
+        );
+
+      deleteButton.textContent =
+        "🗑️";
+
+      deleteButton.style.float =
+        "right";
+
+      deleteButton.style.border =
+        "0";
+
+      deleteButton.style.background =
+        "transparent";
+
+      deleteButton.style.cursor =
+        "pointer";
+
+      deleteButton.onclick = () => {
+
+        memories.splice(
+          index,
+          1
+        );
+
+        localStorage.setItem(
+          memoryKey,
+          JSON.stringify(memories)
+        );
+
+        renderMemory();
+
+      };
+
+      card.appendChild(text);
+      card.appendChild(
+        deleteButton
+      );
+
+      list.appendChild(card);
+
+    }
+  );
 }
 
 
-/* SERVICE WORKER */
+document.getElementById(
+  "memoryForm"
+).addEventListener(
+  "submit",
+  event => {
+
+    event.preventDefault();
+
+    const input =
+      document.getElementById(
+        "memoryInput"
+      );
+
+    const value =
+      input.value.trim();
+
+    if (!value) return;
+
+    const memories =
+      JSON.parse(
+        localStorage.getItem(
+          memoryKey
+        ) || "[]"
+      );
+
+    memories.push(value);
+
+    localStorage.setItem(
+      memoryKey,
+      JSON.stringify(memories)
+    );
+
+    input.value = "";
+
+    renderMemory();
+
+  }
+);
+
+renderMemory();
+
+
+/* =========================
+   SERVICE WORKER
+========================= */
 
 if ("serviceWorker" in navigator) {
 
