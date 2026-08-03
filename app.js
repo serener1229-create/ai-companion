@@ -1,76 +1,97 @@
 const BACKEND_URL = "https://niko-backend-1.onrender.com";
 
-const pages = [...document.querySelectorAll(".page")];
 
-function showPage(id) {
+// ===============================
+// PAGE NAVIGATION
+// ===============================
+
+const pages = document.querySelectorAll(".page");
+
+function openPage(pageId) {
   pages.forEach(page => {
-    page.classList.toggle("active", page.id === id);
+    page.classList.toggle("active", page.id === pageId);
   });
 
-  window.scrollTo(0, 0);
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
 
-/* =========================
-   PAGE NAVIGATION
-========================= */
-
+// Open pages from buttons
 document.querySelectorAll("[data-page]").forEach(button => {
   button.addEventListener("click", () => {
-    showPage(button.dataset.page);
+    openPage(button.dataset.page);
   });
 });
 
+
+// Back buttons
 document.querySelectorAll(".back").forEach(button => {
   button.addEventListener("click", () => {
-    showPage("home");
+    openPage("home");
   });
 });
 
 
-/* =========================
-   CHAT
-========================= */
+// ===============================
+// CHAT
+// ===============================
 
 const messages = document.getElementById("messages");
+const chatForm = document.getElementById("chatForm");
+const messageInput = document.getElementById("messageInput");
+
 
 function addMessage(text, mine = false) {
+
   const bubble = document.createElement("div");
 
-  bubble.className =
-    "bubble " + (mine ? "me" : "niko");
+  bubble.className = mine
+    ? "bubble me"
+    : "bubble niko";
 
   bubble.textContent = text;
 
   messages.appendChild(bubble);
-  messages.scrollTop = messages.scrollHeight;
 
-  return bubble;
+  messages.scrollTop = messages.scrollHeight;
 }
 
-addMessage(
-  "Hi! I'm Niko 👋 Say “Niko” when you want to talk to me."
-);
+
+// Initial message
+if (messages) {
+  addMessage(
+    "Hey. I'm Niko. What are you thinking about?"
+  );
+}
 
 
-document.getElementById("chatForm").addEventListener(
-  "submit",
-  async event => {
+// Send message
+if (chatForm) {
+
+  chatForm.addEventListener("submit", async event => {
 
     event.preventDefault();
 
-    const input =
-      document.getElementById("messageInput");
-
-    const text = input.value.trim();
+    const text = messageInput.value.trim();
 
     if (!text) return;
 
-    input.value = "";
+    messageInput.value = "";
 
     addMessage(text, true);
 
-    const thinking = addMessage("Thinking…");
+    const thinking = document.createElement("div");
+
+    thinking.className = "bubble niko";
+    thinking.textContent = "Thinking…";
+
+    messages.appendChild(thinking);
+
+    messages.scrollTop = messages.scrollHeight;
+
 
     try {
 
@@ -78,62 +99,248 @@ document.getElementById("chatForm").addEventListener(
         BACKEND_URL + "/chat",
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json"
           },
+
           body: JSON.stringify({
             message: text
           })
         }
       );
 
+
       if (!response.ok) {
         throw new Error("Server error");
       }
+
 
       const data = await response.json();
 
       thinking.remove();
 
+
       const reply =
         data.reply ||
-        "I couldn't get a response.";
+        "I couldn't think of a response.";
 
       addMessage(reply);
 
       speak(reply);
+
 
     } catch (error) {
 
       thinking.remove();
 
       addMessage(
-        "I can't reach Niko's server right now. Please try again."
+        "I can't reach Niko's server right now. Please try again in a moment."
       );
+
     }
+
+  });
+
+}
+
+
+// ===============================
+// LANGUAGE PAGE
+// ===============================
+
+const languageStatus =
+  document.getElementById("languageStatus");
+
+
+document.querySelectorAll("[data-lang]").forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    const language = button.dataset.lang;
+
+
+    if (languageStatus) {
+
+      languageStatus.textContent =
+        `Niko is ready for ${language}.`;
+
+    }
+
+
+    // Automatically open chat
+    openPage("chat");
+
+
+    // Put a useful starting message in the input
+    if (messageInput) {
+
+      messageInput.value =
+        `Let's practice ${language}.`;
+
+      messageInput.focus();
+
+    }
+
+  });
+
+});
+
+
+// ===============================
+// MEMORY
+// ===============================
+
+const MEMORY_KEY = "nikoMemories";
+
+const memoryForm =
+  document.getElementById("memoryForm");
+
+const memoryInput =
+  document.getElementById("memoryInput");
+
+const memoryList =
+  document.getElementById("memoryList");
+
+
+function getMemories() {
+
+  try {
+
+    return JSON.parse(
+      localStorage.getItem(MEMORY_KEY) || "[]"
+    );
+
+  } catch {
+
+    return [];
+
   }
-);
 
-
-/* =========================
-   NIKO VOICE
-========================= */
-
-let availableVoices = [];
-
-function loadVoices() {
-  if (!("speechSynthesis" in window)) return;
-
-  availableVoices =
-    window.speechSynthesis.getVoices();
 }
 
-loadVoices();
 
-if ("speechSynthesis" in window) {
-  speechSynthesis.onvoiceschanged = loadVoices;
+function saveMemories(memories) {
+
+  localStorage.setItem(
+    MEMORY_KEY,
+    JSON.stringify(memories)
+  );
+
 }
 
+
+function renderMemory() {
+
+  if (!memoryList) return;
+
+  const memories = getMemories();
+
+  memoryList.innerHTML = "";
+
+
+  if (memories.length === 0) {
+
+    const empty = document.createElement("div");
+
+    empty.className = "memory-empty";
+
+    empty.textContent =
+      "Nothing saved yet.";
+
+    memoryList.appendChild(empty);
+
+    return;
+
+  }
+
+
+  memories.forEach((memory, index) => {
+
+    const card = document.createElement("div");
+
+    card.className = "memory-item";
+
+
+    const text = document.createElement("span");
+
+    text.textContent = memory;
+
+
+    const deleteButton =
+      document.createElement("button");
+
+    deleteButton.textContent = "×";
+
+    deleteButton.setAttribute(
+      "aria-label",
+      "Delete memory"
+    );
+
+
+    deleteButton.addEventListener(
+      "click",
+      () => {
+
+        const current = getMemories();
+
+        current.splice(index, 1);
+
+        saveMemories(current);
+
+        renderMemory();
+
+      }
+    );
+
+
+    card.appendChild(text);
+
+    card.appendChild(deleteButton);
+
+    memoryList.appendChild(card);
+
+  });
+
+}
+
+
+if (memoryForm) {
+
+  memoryForm.addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+      const value =
+        memoryInput.value.trim();
+
+      if (!value) return;
+
+
+      const memories = getMemories();
+
+      memories.push(value);
+
+      saveMemories(memories);
+
+      memoryInput.value = "";
+
+      renderMemory();
+
+    }
+  );
+
+}
+
+
+renderMemory();
+
+
+// ===============================
+// NIKO VOICE
+// ===============================
 
 function speak(text) {
 
@@ -144,633 +351,210 @@ function speak(text) {
     return;
   }
 
+
   speechSynthesis.cancel();
+
 
   const utterance =
     new SpeechSynthesisUtterance(text);
 
+
   utterance.lang = "en-US";
+
   utterance.rate = 0.95;
-  utterance.pitch = 1.05;
-  utterance.volume = 1;
 
-  /*
-    Prefer an English voice if the device provides one.
-  */
+  utterance.pitch = 1.0;
 
-  const englishVoice =
-    availableVoices.find(
-      voice =>
-        voice.lang &&
-        voice.lang.toLowerCase().startsWith("en")
-    );
+  utterance.volume = 1.0;
 
-  if (englishVoice) {
-    utterance.voice = englishVoice;
-  }
 
   speechSynthesis.speak(utterance);
+
 }
 
 
-/* =========================
-   WAKE WORD: "NIKO"
-========================= */
+// ===============================
+// VOICE INPUT
+// ===============================
+
+let recognition = null;
+
 
 const SpeechRecognition =
   window.SpeechRecognition ||
   window.webkitSpeechRecognition;
 
-let wakeRecognition = null;
-let wakeListening = false;
-let commandRecognition = null;
 
-function createWakeRecognition() {
+if (SpeechRecognition) {
 
-  if (!SpeechRecognition) {
-    console.log(
-      "Speech recognition isn't supported in this browser."
-    );
-
-    return null;
-  }
-
-  const recognition =
+  recognition =
     new SpeechRecognition();
 
   recognition.lang = "en-US";
 
-  /*
-    We only need short pieces of speech
-    while waiting for "Niko".
-  */
+  recognition.continuous = false;
 
-  recognition.continuous = true;
   recognition.interimResults = false;
-  recognition.maxAlternatives = 3;
-
-  recognition.onstart = () => {
-
-    wakeListening = true;
-
-    console.log(
-      "Niko wake-word listener is active."
-    );
-
-    updateWakeStatus("Listening for “Niko”…");
-  };
 
 
   recognition.onresult = event => {
 
-    for (
-      let i = event.resultIndex;
-      i < event.results.length;
-      i++
-    ) {
+    const transcript =
+      event.results[0][0].transcript;
 
-      const result =
-        event.results[i];
 
-      if (!result.isFinal) continue;
+    openPage("chat");
 
-      const transcript =
-        result[0].transcript
-          .trim()
-          .toLowerCase();
 
-      console.log(
-        "Heard:",
-        transcript
-      );
+    if (messageInput) {
 
-      /*
-        Recognise:
-        "Niko"
-        "Hey Niko"
-        "Okay Niko"
-        "Hi Niko"
-      */
+      messageInput.value = transcript;
 
-      const wakeWord =
-        /\b(?:hey|hi|okay|ok)?\s*niko\b/i;
+      chatForm.requestSubmit();
 
-      if (wakeWord.test(transcript)) {
-
-        activateNiko();
-
-        return;
-      }
     }
+
   };
 
 
-  recognition.onerror = event => {
+  recognition.onerror = error => {
 
     console.log(
-      "Wake recognition error:",
-      event.error
+      "Voice recognition:",
+      error.error
     );
 
-    wakeListening = false;
-
-    /*
-      Some browsers stop recognition automatically.
-      We restart it after a short delay.
-    */
-
-    if (
-      event.error !== "not-allowed" &&
-      event.error !== "service-not-allowed"
-    ) {
-
-      setTimeout(() => {
-        startWakeListener();
-      }, 1200);
-    }
   };
 
-
-  recognition.onend = () => {
-
-    wakeListening = false;
-
-    /*
-      Keep the wake listener alive while
-      the Niko page is open.
-    */
-
-    if (
-      document.visibilityState === "visible"
-    ) {
-
-      setTimeout(() => {
-        startWakeListener();
-      }, 700);
-    }
-  };
-
-
-  return recognition;
 }
 
 
-function startWakeListener() {
+// ===============================
+// VOICE ACTIVATION BUTTON
+// ===============================
 
-  if (!SpeechRecognition) return;
+// If your HTML has a voice button,
+// this makes it work.
 
-  if (wakeListening) return;
+const voiceButton =
+  document.getElementById("speakBtn");
 
-  if (
-    document.visibilityState !== "visible"
-  ) {
-    return;
-  }
 
-  if (!wakeRecognition) {
-    wakeRecognition =
-      createWakeRecognition();
-  }
+if (voiceButton) {
 
-  if (!wakeRecognition) return;
-
-  try {
-
-    wakeRecognition.start();
-
-  } catch (error) {
-
-    /*
-      Browser can throw if start()
-      is called while already starting.
-    */
-
-    console.log(
-      "Wake listener:",
-      error.message
-    );
-  }
-}
-
-
-/* =========================
-   WHEN "NIKO" IS HEARD
-========================= */
-
-function activateNiko() {
-
-  console.log("Niko activated!");
-
-  /*
-    Stop the wake listener temporarily
-    so it doesn't hear the command twice.
-  */
-
-  stopWakeListener();
-
-  /*
-    Open the chat page.
-  */
-
-  showPage("chat");
-
-  /*
-    Niko acknowledges the wake word.
-  */
-
-  speak("Yes?");
-
-  updateWakeStatus("Niko is listening…");
-
-  /*
-    Wait briefly for "Yes?" to finish,
-    then listen for the actual command.
-  */
-
-  setTimeout(() => {
-
-    startCommandListener();
-
-  }, 900);
-}
-
-
-/* =========================
-   COMMAND LISTENER
-========================= */
-
-function startCommandListener() {
-
-  if (!SpeechRecognition) {
-
-    alert(
-      "Voice recognition isn't supported in this browser."
-    );
-
-    return;
-  }
-
-  if (commandRecognition) {
-
-    try {
-      commandRecognition.abort();
-    } catch (_) {}
-
-  }
-
-  commandRecognition =
-    new SpeechRecognition();
-
-  commandRecognition.lang =
-    "en-US";
-
-  commandRecognition.continuous =
-    false;
-
-  commandRecognition.interimResults =
-    false;
-
-  commandRecognition.maxAlternatives =
-    1;
-
-
-  commandRecognition.onstart = () => {
-
-    updateWakeStatus(
-      "🎙️ I'm listening…"
-    );
-  };
-
-
-  commandRecognition.onresult =
-    event => {
-
-      const command =
-        event.results[0][0].transcript.trim();
-
-      console.log(
-        "Niko command:",
-        command
-      );
-
-      if (!command) return;
-
-      document.getElementById(
-        "messageInput"
-      ).value = command;
-
-      /*
-        Send the recognized command
-        to your existing backend.
-      */
-
-      document
-        .getElementById("chatForm")
-        .requestSubmit();
-    };
-
-
-  commandRecognition.onerror =
-    event => {
-
-      console.log(
-        "Command recognition:",
-        event.error
-      );
-
-      updateWakeStatus(
-        "Say “Niko” whenever you want me."
-      );
-    };
-
-
-  commandRecognition.onend = () => {
-
-    commandRecognition = null;
-
-    updateWakeStatus(
-      "Say “Niko” whenever you want me."
-    );
-
-    /*
-      Start waiting for the wake word again.
-    */
-
-    setTimeout(() => {
-      startWakeListener();
-    }, 700);
-  };
-
-
-  try {
-
-    commandRecognition.start();
-
-  } catch (error) {
-
-    console.log(
-      "Could not start command recognition:",
-      error
-    );
-  }
-}
-
-
-/* =========================
-   STOP WAKE LISTENER
-========================= */
-
-function stopWakeListener() {
-
-  if (!wakeRecognition) return;
-
-  try {
-    wakeRecognition.stop();
-  } catch (_) {}
-
-  wakeListening = false;
-}
-
-
-/* =========================
-   STATUS
-========================= */
-
-function updateWakeStatus(text) {
-
-  /*
-    This won't break anything if
-    you haven't added a status element yet.
-  */
-
-  const status =
-    document.getElementById(
-      "wakeStatus"
-    );
-
-  if (status) {
-    status.textContent = text;
-  }
-}
-
-
-/* =========================
-   START LISTENING AFTER
-   USER INTERACTION
-========================= */
-
-/*
-  Browsers may require microphone permission
-  to be granted from a user interaction.
-
-  Clicking anywhere on Niko starts the listener.
-*/
-
-document.addEventListener(
-  "click",
-  () => {
-
-    if (!wakeListening) {
-      startWakeListener();
-    }
-
-  },
-  { once: true }
-);
-
-
-/*
-  Also try when the page becomes visible.
-*/
-
-document.addEventListener(
-  "visibilitychange",
-  () => {
-
-    if (
-      document.visibilityState === "visible"
-    ) {
-
-      setTimeout(() => {
-        startWakeListener();
-      }, 500);
-
-    } else {
-
-      stopWakeListener();
-
-    }
-
-  }
-);
-
-
-/* =========================
-   LANGUAGE PAGE
-========================= */
-
-document.querySelectorAll(
-  "[data-lang]"
-).forEach(button => {
-
-  button.addEventListener(
+  voiceButton.addEventListener(
     "click",
     () => {
 
-      const language =
-        button.dataset.lang;
+      if (!recognition) {
 
-      document.getElementById(
-        "languageStatus"
-      ).textContent =
-        `🌟 Niko is ready for ${language}! Go to Talk to Niko and say "Let's practice ${language}."`;
+        alert(
+          "Voice input isn't supported in this browser."
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        recognition.start();
+
+        voiceButton.classList.add("listening");
+
+      } catch {
+
+        // Recognition may already be running.
+
+      }
 
     }
   );
 
-});
-
-
-/* =========================
-   MEMORY
-========================= */
-
-const memoryKey =
-  "nikoMemories";
-
-
-function renderMemory() {
-
-  const list =
-    document.getElementById(
-      "memoryList"
-    );
-
-  const memories =
-    JSON.parse(
-      localStorage.getItem(
-        memoryKey
-      ) || "[]"
-    );
-
-  list.innerHTML = "";
-
-  memories.forEach(
-    (memory, index) => {
-
-      const card =
-        document.createElement(
-          "div"
-        );
-
-      card.className = "card";
-
-      const text =
-        document.createElement(
-          "span"
-        );
-
-      text.textContent =
-        "💭 " + memory;
-
-      const deleteButton =
-        document.createElement(
-          "button"
-        );
-
-      deleteButton.textContent =
-        "🗑️";
-
-      deleteButton.style.float =
-        "right";
-
-      deleteButton.style.border =
-        "0";
-
-      deleteButton.style.background =
-        "transparent";
-
-      deleteButton.style.cursor =
-        "pointer";
-
-      deleteButton.onclick = () => {
-
-        memories.splice(
-          index,
-          1
-        );
-
-        localStorage.setItem(
-          memoryKey,
-          JSON.stringify(memories)
-        );
-
-        renderMemory();
-
-      };
-
-      card.appendChild(text);
-      card.appendChild(
-        deleteButton
-      );
-
-      list.appendChild(card);
-
-    }
-  );
 }
 
 
-document.getElementById(
-  "memoryForm"
-).addEventListener(
-  "submit",
+// Remove listening state
+if (recognition) {
+
+  recognition.onend = () => {
+
+    if (voiceButton) {
+
+      voiceButton.classList.remove(
+        "listening"
+      );
+
+    }
+
+  };
+
+}
+
+
+// ===============================
+// KEYBOARD SHORTCUTS
+// ===============================
+
+document.addEventListener(
+  "keydown",
   event => {
 
-    event.preventDefault();
+    // Escape = home
+    if (event.key === "Escape") {
 
-    const input =
-      document.getElementById(
-        "memoryInput"
-      );
+      openPage("home");
 
-    const value =
-      input.value.trim();
+    }
 
-    if (!value) return;
+    // / = focus chat
+    if (
+      event.key === "/" &&
+      document.activeElement !== messageInput
+    ) {
 
-    const memories =
-      JSON.parse(
-        localStorage.getItem(
-          memoryKey
-        ) || "[]"
-      );
+      event.preventDefault();
 
-    memories.push(value);
+      openPage("chat");
 
-    localStorage.setItem(
-      memoryKey,
-      JSON.stringify(memories)
-    );
+      messageInput?.focus();
 
-    input.value = "";
-
-    renderMemory();
+    }
 
   }
 );
 
-renderMemory();
 
-
-/* =========================
-   SERVICE WORKER
-========================= */
+// ===============================
+// SERVICE WORKER
+// ===============================
 
 if ("serviceWorker" in navigator) {
 
-  navigator.serviceWorker
-    .register("sw.js")
-    .catch(() => {});
+  window.addEventListener(
+    "load",
+    () => {
+
+      navigator.serviceWorker
+        .register("sw.js")
+        .catch(error => {
+
+          console.log(
+            "Service worker:",
+            error
+          );
+
+        });
+
+    }
+  );
 
 }
+
+
+// ===============================
+// START NIKO
+// ===============================
+
+openPage("home");
