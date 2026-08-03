@@ -617,3 +617,18 @@ button {
     font-size: 25px;
   }
 }
+.wake-status {
+  margin: 7px 0 0;
+  color: #777b9c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wake-status.listening {
+  color: #4d4f9b;
+}
+
+.wake-status.active {
+  color: #d66bb5;
+  font-weight: 800;
+}
